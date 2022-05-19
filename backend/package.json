@@ -1,0 +1,33 @@
+{
+  "name": "messages-api",
+  "version": "1.0.0",
+  "description": "",
+  "scripts": {
+    "start": "nodemon ./bin/www"
+  },
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "eslint": "latest",
+    "eslint-config-airbnb-base": "latest",
+    "eslint-config-prettier": "latest",
+    "eslint-plugin-import": "latest",
+    "eslint-plugin-prettier": "latest",
+    "express-basic-auth": "^1.2.1",
+    "nodemon": "latest",
+    "prettier": "latest"
+  },
+  "dependencies": {
+    "bcrypt": "^5.0.1",
+    "body-parser": "^1.19.1",
+    "cookie-parser": "^1.4.4",
+    "cors": "latest",
+    "debug": "^2.6.9",
+    "dotenv": "latest",
+    "express": "latest",
+    "http-errors": "^1.6.3",
+    "jade": "^1.11.0",
+    "mariadb": "^2.5.5",
+    "morgan": "^1.9.1"
+  }
+}
