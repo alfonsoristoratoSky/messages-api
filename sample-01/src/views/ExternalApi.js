@@ -5,7 +5,7 @@ import { useAuth0, withAuthenticationRequired } from "@auth0/auth0-react";
 import { getConfig } from "../config";
 import Loading from "../components/Loading";
 import jwt_decode from "jwt-decode";
-
+import axios from "axios";
 export const ExternalApiComponent = () => {
   const { apiOrigin = "http://localhost:8080", audience } = getConfig();
 
@@ -15,8 +15,12 @@ export const ExternalApiComponent = () => {
     error: null,
   });
   const [id, setId] = useState("");
+  const [message, setMessage] = useState("");
   const handleChangeId = (event) => {
     setId(event.target.value);
+  };
+  const handleChangeMessage = (event) => {
+    setMessage(event.target.value);
   };
 
   const { getAccessTokenSilently, loginWithPopup, getAccessTokenWithPopup } =
@@ -56,7 +60,7 @@ export const ExternalApiComponent = () => {
     await callApi();
   };
 
-  const callApi = async (route, scope, methodUsed) => {
+  const callApi = async (route, scope, methodUsed, bodyUsed) => {
     try {
       let token;
       if (!scope) {
@@ -66,23 +70,21 @@ export const ExternalApiComponent = () => {
           scope: scope,
         });
       }
-      let method;
-      if (methodUsed) {
-        method = methodUsed;
-      } else {
-        method = "GET";
-      }
 
-      const response = await fetch(`${apiOrigin}/${route}`, {
-        method: method,
+      const fetchInit = {
         headers: {
           Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
         },
-      });
+        ...(bodyUsed && { data: bodyUsed }),
+        ...(methodUsed && { method: methodUsed }),
+      };
+      const response = await axios.request(`${apiOrigin}/${route}`, fetchInit);
       setState({});
       setId("");
+      setMessage("");
 
-      const responseData = await response.json();
+      const responseData = await response.data;
       const decodedToken = jwt_decode(token);
       setState({
         ...state,
@@ -197,7 +199,7 @@ export const ExternalApiComponent = () => {
           }}
           disabled={!audience}
         >
-          Ping API - View Users (no scope)
+          READ Users (no scope)
         </Button>
         <Button
           color="primary"
@@ -207,30 +209,68 @@ export const ExternalApiComponent = () => {
           }}
           disabled={!audience}
         >
-          Ping API - View Messages (read:messages scope)
+          READ Messages (read:messages scope)
         </Button>
         <div className="mt-5">
-          <input type="text" name="ID" value={id} onChange={handleChangeId} />
+          <input
+            type="text"
+            name="ID"
+            value={id}
+            onChange={handleChangeId}
+            placeholder="Insert ID here"
+          />
+          <input
+            type="text"
+            name="Message"
+            value={message}
+            onChange={handleChangeMessage}
+            placeholder="If needed, insert Message here"
+            size={30}
+          />
         </div>
         <Button
           color="primary"
-          className="mt-5"
+          className="mt-1"
           onClick={() => {
             callApi(`messages/${id}`, "read:messages");
           }}
-          disabled={!audience || !id}
+          disabled={!audience || !id || message !== ""}
         >
-          Ping API - View Messages/:id (read:messages scope)
+          READ Messages/:id (read:messages scope)
         </Button>
         <Button
           color="primary"
-          className="mt-5"
+          className="mt-1"
           onClick={() => {
-            callApi("messages/3", "all:messages", "DELETE");
+            callApi(`messages/${id}`, "all:messages", "DELETE");
           }}
-          disabled={!audience || !id}
+          disabled={!audience || !id || message !== ""}
         >
-          Ping API - DELETE Messages/:id (all:messages scope)
+          DELETE Messages/:id (all:messages scope)
+        </Button>
+        <Button
+          color="primary"
+          className="mt-1"
+          onClick={() => {
+            callApi(`messages/${id}`, "all:messages", "PUT", {
+              message: message,
+            });
+          }}
+          disabled={!audience || !id || !message}
+        >
+          PUT Messages/:id (all:messages scope)
+        </Button>
+        <Button
+          color="primary"
+          className="mt-1"
+          onClick={() => {
+            callApi(`messages`, "all:messages", "POST", {
+              message: message,
+            });
+          }}
+          disabled={!audience || !message || id !== ""}
+        >
+          CREATE Messages (all:messages scope)
         </Button>
       </div>
 

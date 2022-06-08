@@ -1,7 +1,6 @@
 const createError = require('http-errors');
 const express = require('express');
 const { auth } = require('express-oauth2-jwt-bearer');
-const jwks = require('jwks-rsa');
 const path = require('path');
 const cookieParser = require('cookie-parser');
 const logger = require('morgan');
@@ -10,13 +9,13 @@ const bodyParser = require('body-parser');
 const cors = require('cors');
 
 const indexRouter = require('./routes/index');
-const dataAccessor = require('./data/dataAccessor');
 
 const app = express();
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
-app.use(cors());
+app.use(cors({ origin: 'http://localhost:3000' }));
+
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'jade');
