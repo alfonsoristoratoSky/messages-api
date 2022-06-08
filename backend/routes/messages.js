@@ -1,12 +1,18 @@
 const express = require('express');
 const dataAccessor = require('../data/dataAccessor');
+const { requiredScopes } = require('express-oauth2-jwt-bearer');
 const router = express.Router();
 
 const {
   returnResponseOfDataAccessorResponse,
 } = require('../utils/serverFunctions');
 
-router.get('/', async (req, res) => {
+// scopes
+
+const readMessagesScope = requiredScopes('read:messages');
+const allMessagesScope = requiredScopes('all:messages');
+
+router.get('/', readMessagesScope, async (req, res) => {
   try {
     await returnResponseOfDataAccessorResponse(
       dataAccessor.messages.all(),
@@ -17,7 +23,7 @@ router.get('/', async (req, res) => {
   }
 });
 
-router.get('/:messageId', async (req, res) => {
+router.get('/:messageId', readMessagesScope, async (req, res) => {
   let messageId = req.params.messageId;
   try {
     await returnResponseOfDataAccessorResponse(
@@ -29,7 +35,7 @@ router.get('/:messageId', async (req, res) => {
   }
 });
 
-router.post('/', async (req, res) => {
+router.post('/', allMessagesScope, async (req, res) => {
   let data = req.body;
 
   try {
@@ -56,7 +62,7 @@ router.post('/', async (req, res) => {
 //   }
 // });
 
-router.put('/:messageId', async (req, res) => {
+router.put('/:messageId', allMessagesScope, async (req, res) => {
   let messageId = req.params.messageId;
   let data = req.body;
   try {
@@ -69,7 +75,7 @@ router.put('/:messageId', async (req, res) => {
   }
 });
 
-router.delete('/:messageId', async (req, res) => {
+router.delete('/:messageId', allMessagesScope, async (req, res) => {
   let messageId = req.params.messageId;
   try {
     await returnResponseOfDataAccessorResponse(

@@ -1,6 +1,7 @@
 const createError = require('http-errors');
 const express = require('express');
-const basicAuth = require('express-basic-auth');
+const { auth } = require('express-oauth2-jwt-bearer');
+const jwks = require('jwks-rsa');
 const path = require('path');
 const cookieParser = require('cookie-parser');
 const logger = require('morgan');
@@ -10,9 +11,6 @@ const cors = require('cors');
 
 const indexRouter = require('./routes/index');
 const dataAccessor = require('./data/dataAccessor');
-
-// hashing service
-const bcrypt = require('bcrypt');
 
 const app = express();
 
@@ -29,41 +27,13 @@ app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
-// basic auth
-const getUnauthorizedResponse = (req) => {
-  return req.auth
-    ? 'Credentials ' + req.auth.user + ':' + req.auth.password + ' rejected'
-    : 'No credentials provided';
-};
-const myAuthorizer = async (username, password, cb) => {
-  let userFound = await dataAccessor.users.findByUsername(username);
+// Auth0
+const checkJwt = auth({
+  audience: 'MessagesAPI',
+  issuerBaseURL: `https://dev-vhcqbq4w.eu.auth0.com/`,
+});
+app.use(checkJwt);
 
-  if (userFound.data[0] === undefined || password === undefined) {
-    return cb(null, false);
-  }
-  const userMatches = basicAuth.safeCompare(
-    username,
-    userFound.data[0].username
-  );
-
-  const passwordMatches = bcrypt.compareSync(
-    password,
-    userFound.data[0].password
-  );
-  if (userMatches && passwordMatches) {
-    return cb(null, true);
-  } else {
-    return cb(null, false);
-  }
-};
-app.use(
-  basicAuth({
-    challenge: true,
-    unauthorizedResponse: getUnauthorizedResponse,
-    authorizer: myAuthorizer,
-    authorizeAsync: true,
-  })
-);
 app.use('/', indexRouter);
 
 // catch 404 and forward to error handler
